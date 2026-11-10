@@ -154,10 +154,27 @@ class EdgyFenster:
         self.status = tk.Label(kopf, text="bereit", font=self.schrift, fg=GRAU, bg=HINTERGRUND)
         self.status.pack(side="right")
 
+        # Eingabezeile ZUERST unten festmachen, damit sie nie aus dem Fenster gedrückt wird
+        unten = tk.Frame(self.root, bg=FELD, cursor="xterm")
+        unten.pack(fill="x", side="bottom", padx=16, pady=16)
+        self.prompt = tk.Label(unten, text="›", font=self.schrift_fett, fg=DE_ROT, bg=FELD)
+        self.prompt.pack(side="left", padx=(14, 8), pady=10)
+        self.feld = tk.Entry(unten, bg=FELD, fg=TEXT, font=self.schrift, bd=0,
+                             highlightthickness=0, insertbackground=GOLD, insertwidth=2,
+                             disabledbackground=FELD, readonlybackground=FELD)
+        self.feld.pack(side="left", fill="x", expand=True, padx=(0, 14), pady=10)
+        self.feld.bind("<Return>", self._enter)
+        self.feld.bind("<KP_Enter>", self._enter)
+        self.feld.bind("<Up>", lambda e: self._blaettern(-1))
+        self.feld.bind("<Down>", lambda e: self._blaettern(1))
+        unten.bind("<Button-1>", lambda e: self.feld.focus_set())
+        self.prompt.bind("<Button-1>", lambda e: self.feld.focus_set())
+
         rahmen = tk.Frame(self.root, bg=HINTERGRUND)
         rahmen.pack(fill="both", expand=True, padx=22, pady=(6, 0))
         self.anzeige = tk.Text(
-            rahmen, bg=HINTERGRUND, fg=TEXT, font=self.schrift, bd=0, highlightthickness=0,
+            rahmen, height=1, width=1,
+            bg=HINTERGRUND, fg=TEXT, font=self.schrift, bd=0, highlightthickness=0,
             wrap="word", insertbackground=TEXT, selectbackground="#333338",
             padx=0, pady=4, spacing1=2, spacing3=2, cursor="arrow",
         )
@@ -174,20 +191,36 @@ class EdgyFenster:
         self.anzeige.tag_configure("frage", foreground=GOLD)
         self.anzeige.tag_configure("titel", foreground=TEXT, font=self.schrift_fett)
         self.anzeige.configure(state="disabled")
+        # Wer ins Fenster tippt, schreibt immer in die Eingabezeile
+        self.anzeige.bind("<ButtonRelease-1>", self._fokus_wenn_nichts_markiert)
+        self.anzeige.bind("<Key>", self._tippen_umleiten)
 
-        unten = tk.Frame(self.root, bg=FELD)
-        unten.pack(fill="x", side="bottom", padx=16, pady=16)
-        self.prompt = tk.Label(unten, text="›", font=self.schrift_fett, fg=DE_ROT, bg=FELD)
-        self.prompt.pack(side="left", padx=(14, 8), pady=10)
-        self.feld = tk.Entry(unten, bg=FELD, fg=TEXT, font=self.schrift, bd=0,
-                             highlightthickness=0, insertbackground=GOLD, insertwidth=2)
-        self.feld.pack(side="left", fill="x", expand=True, padx=(0, 14), pady=10)
-        self.feld.bind("<Return>", self._enter)
-        self.feld.bind("<Up>", lambda e: self._blaettern(-1))
-        self.feld.bind("<Down>", lambda e: self._blaettern(1))
         self.root.bind("<Escape>", lambda e: self._stopp())
         self.root.bind("<Control-l>", lambda e: self._leeren())
+        self.root.after(150, self._fokus_holen)
+
+    def _fokus_holen(self):
+        try:
+            self.root.lift()
+            self.root.focus_force()
+            self.feld.focus_force()
+            self.feld.icursor("end")
+        except tk.TclError:
+            pass
+
+    def _fokus_wenn_nichts_markiert(self, _=None):
+        if not self.anzeige.tag_ranges("sel"):
+            self.feld.focus_set()
+
+    def _tippen_umleiten(self, ereignis):
+        if ereignis.state & 0x4:  # Strg gedrückt (z. B. Strg+C zum Kopieren)
+            return None
         self.feld.focus_set()
+        if ereignis.char and ereignis.char.isprintable():
+            self.feld.insert("end", ereignis.char)
+        elif ereignis.keysym in ("Return", "KP_Enter"):
+            self._enter()
+        return "break"
 
     def _schreibe(self, text, tag="aus"):
         self.anzeige.configure(state="normal")
