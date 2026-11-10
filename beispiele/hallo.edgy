@@ -1,0 +1,18 @@
+# Mein erstes Edgy-Programm
+gib aus "Hallo Welt!"
+
+frag name "Wie heißt du?"
+gib aus "Schön dich zu sehen, " + name + "."
+
+merk runde = 0
+wiederhol 3 mal
+  merk runde = runde + 1
+  gib aus "Runde " + runde
+ende
+
+frag alter "Wie alt bist du?"
+wenn alter >= 18 dann
+  gib aus "Volljährig."
+sonst
+  gib aus "Noch " + (18 - alter) + " Jahre bis 18."
+ende

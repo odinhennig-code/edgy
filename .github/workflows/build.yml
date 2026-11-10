@@ -1,0 +1,53 @@
+name: Edgy.exe bauen
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Version lesen
+        id: version
+        shell: bash
+        run: |
+          VER=$(python -c "from edgy.version import VERSION; print(VERSION)")
+          echo "ver=$VER" >> "$GITHUB_OUTPUT"
+          if gh release view "v$VER" >/dev/null 2>&1; then
+            echo "neu=nein" >> "$GITHUB_OUTPUT"
+          else
+            echo "neu=ja" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Sprache testen
+        shell: bash
+        run: python tests/test_sprache.py
+
+      - name: Edgy.exe bauen
+        if: steps.version.outputs.neu == 'ja'
+        run: |
+          pip install pyinstaller
+          pyinstaller --noconfirm --onefile --windowed --name Edgy --icon assets/edgy.ico --add-data "assets;assets" main.py
+
+      - name: Neue Version veröffentlichen
+        if: steps.version.outputs.neu == 'ja'
+        shell: bash
+        run: |
+          gh release create "v${{ steps.version.outputs.ver }}" dist/Edgy.exe \
+            --title "Edgy v${{ steps.version.outputs.ver }}" \
+            --notes "Neue Version von Edgy. Wer Edgy schon hat, bekommt sie beim nächsten Start automatisch."
+        env:
+          GH_TOKEN: ${{ github.token }}
