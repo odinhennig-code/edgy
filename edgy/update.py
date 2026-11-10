@@ -70,8 +70,16 @@ def installiere(download_url):
             f'start "" "{alte_exe}"\r\n'
             'del "%~f0"\r\n'
         )
+    # Das neue Edgy muss "frisch" starten und darf nichts vom alten erben,
+    # sonst sucht es seine Dateien im (dann gelöschten) Temp-Ordner des alten.
+    umgebung = {
+        k: v for k, v in os.environ.items()
+        if not k.upper().startswith(("_MEI", "_PYI"))
+    }
+    umgebung["PYINSTALLER_RESET_ENVIRONMENT"] = "1"
     subprocess.Popen(
         ["cmd", "/c", skript],
         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         close_fds=True,
+        env=umgebung,
     )
