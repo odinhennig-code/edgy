@@ -147,7 +147,12 @@ class EdgyFenster:
 
         kopf = tk.Frame(self.root, bg=HINTERGRUND)
         kopf.pack(fill="x", padx=22, pady=(14, 4))
-        tk.Label(kopf, text="edgy", font=(self.schrift.actual("family"), 15, "bold"),
+        try:
+            self._zeichen = tk.PhotoImage(file=ressource("zeichen.png"))
+            tk.Label(kopf, image=self._zeichen, bg=HINTERGRUND).pack(side="left", padx=(0, 10))
+        except Exception:
+            pass
+        tk.Label(kopf, text="Edgy", font=("Segoe UI Semibold", 16),
                  fg=TEXT, bg=HINTERGRUND).pack(side="left")
         tk.Label(kopf, text=f"v{VERSION}", font=self.schrift, fg=GRAU,
                  bg=HINTERGRUND).pack(side="left", padx=(10, 0), pady=(3, 0))
