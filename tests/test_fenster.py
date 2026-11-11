@@ -62,19 +62,38 @@ def foto(f, name):
         os.path.join(ORDNER, f"{nr[0]:02d}_{name}.png"))
 
 
-# =============================================================== 1) Umbau-Animation
+# =============================================================== 1) Umbau-Film
 f = fenster.EdgyFenster(umbau=True)
 start = time.time()
-for zeit, name in [(0.9, "umbau_start"), (2.0, "umbau_fenster_waechst"), (2.6, "umbau_icons"),
-                   (3.1, "umbau_explorer"), (3.7, "umbau_konsole_rutscht"), (4.3, "umbau_editor"),
-                   (6.2, "umbau_fertig")]:
+U, S = fenster.EdgyFenster.FILM_UMBAU / 1000, fenster.EdgyFenster.FILM_SPRUCH / 1000
+for zeit, name in [(0.75, "film_kachel"), (2.3, "film_intro"), (3.0, "film_wisch"), (4.9, "film_altes_edgy"),
+                   (7.2, "film_frage"), (12.6, "film_antwort"), (16.2, "film_umbauen_knopf"),
+                   (U + 0.6, "film_fenster_waechst"), (U + 1.6, "film_icons_explorer"),
+                   (U + 2.5, "film_konsole_rutscht"), (U + 3.8, "film_editor"),
+                   (S + 1.0, "film_spruch_halb"), (S + 2.6, "film_spruch"), (S + 3.6, "film_wisch_weg"),
+                   (fenster.EdgyFenster.FILM_ENDE / 1000 + 0.8, "film_fertig")]:
     while time.time() - start < zeit:
         f.root.update()
-        time.sleep(0.005)
+        time.sleep(0.004)
     foto(f, name)
 with open(einstellungen, encoding="utf-8") as fh:
-    assert json.load(fh).get(fenster.UMBAU_SCHLUESSEL) is True, "Umbau-Animation wurde nicht gemerkt"
+    assert json.load(fh).get(fenster.UMBAU_SCHLUESSEL) is True, "Umbau-Film wurde nicht gemerkt"
 assert f.baum.exists(os.path.join(arbeit, "hallo.edgy"))
+assert f.aktivitaet.winfo_width() > 10 and f.seitenleiste.winfo_width() > 100
+f.root.destroy()
+
+# =============================================================== 1b) Überspringen
+with open(einstellungen, "w", encoding="utf-8") as fh:
+    json.dump({"arbeitsordner": arbeit}, fh)
+f = fenster.EdgyFenster()  # Film nicht gesehen -> startet
+pumpe(f, 6.0)
+f._umbau_ueberspringen()
+pumpe(f, 1.0)
+assert f._umbau_erledigt and f.seitenleiste.winfo_width() > 100 and f.statusleiste.winfo_height() > 10
+assert not f.chat.winfo_exists()
+foto(f, "uebersprungen")
+with open(einstellungen, encoding="utf-8") as fh:
+    assert json.load(fh).get(fenster.UMBAU_SCHLUESSEL) is True
 f.root.destroy()
 
 # =============================================================== 2) Normaler Start (ohne Animation)
