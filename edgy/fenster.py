@@ -801,6 +801,7 @@ class EdgyFenster:
         self.willkommen_teile = []
         logo = tk.Label(mitte, image=self.icons("logo_gross"), bg=HINTERGRUND)
         logo.pack(pady=(0, self.px(18)))
+        self.willkommen_bilder = [(logo, "logo_gross")]
 
         def platz(e):
             # Auf kleinen Bildschirmen das große Logo weglassen
@@ -828,6 +829,7 @@ class EdgyFenster:
             zeile.pack(fill="x", pady=self.px(3))
             i = tk.Label(zeile, image=self.icons(icon), bg=HINTERGRUND)
             i.pack(side="left", padx=(0, self.px(10)))
+            self.willkommen_bilder.append((i, icon))
             t = tk.Label(zeile, text=text, font=self.ui_schrift, fg="#d24545", bg=HINTERGRUND)
             t.pack(side="left")
             k = tk.Label(zeile, text=taste, font=self.ui_schrift_klein, fg=GRAU, bg=HINTERGRUND)
@@ -969,6 +971,12 @@ class EdgyFenster:
             e["rahmen"].place_configure(x=-self.px(50))
         for teil, _ in self.willkommen_teile:
             teil.configure(fg=HINTERGRUND)
+        leer = tk.PhotoImage(width=1, height=1)
+        self._leer_bild = leer
+        for bild, name in self.willkommen_bilder:
+            groesse = self.icons(name)
+            bild.configure(image=leer, width=groesse.width() if groesse else 1,
+                           height=groesse.height() if groesse else 1)
         self._editor_anzeigen()
         self.root.deiconify()
         _windows_feinschliff(self.root)
@@ -1029,6 +1037,8 @@ class EdgyFenster:
         for i, (teil, farbe) in enumerate(self.willkommen_teile):
             a.los(420, 0, 1, lambda t, w=teil, f=farbe: w.configure(fg=mische(HINTERGRUND, f, t)),
                   nach_ms=3900 + i * 70)
+        for i, (bild, name) in enumerate(self.willkommen_bilder):
+            a.spaeter(3900 + i * 140, lambda b=bild, n=name: b.configure(image=self.icons(n)))
 
         # 5) Statusleiste
         a.los(260, 0, self.px(26), lambda v: self.statusleiste.configure(height=max(int(v), 1)), nach_ms=4600)
