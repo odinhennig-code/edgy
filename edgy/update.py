@@ -36,12 +36,13 @@ def suche_update():
         return None
     for datei in daten.get("assets", []):
         if datei.get("name", "").lower() == "edgy.exe":
-            return neu, datei["browser_download_url"]
+            return neu, datei["browser_download_url"], datei.get("size") or 0
     return None
 
 
-def installiere(download_url):
+def installiere(download_url, groesse=0, fortschritt=None):
     """Lädt die neue Edgy.exe und tauscht sie nach dem Beenden aus.
+    fortschritt(anteil) wird mit Werten von 0.0 bis 1.0 aufgerufen.
     Danach muss das Programm sich selbst beenden."""
     alte_exe = sys.executable
     ordner = os.path.dirname(alte_exe)
@@ -49,11 +50,16 @@ def installiere(download_url):
 
     anfrage = urllib.request.Request(download_url, headers={"User-Agent": "Edgy"})
     with urllib.request.urlopen(anfrage, timeout=60) as antwort, open(neue_exe, "wb") as f:
+        gesamt = int(antwort.headers.get("Content-Length") or 0) or groesse or 12_000_000
+        geladen = 0
         while True:
             block = antwort.read(65536)
             if not block:
                 break
             f.write(block)
+            geladen += len(block)
+            if fortschritt:
+                fortschritt(min(geladen / gesamt, 0.99))
 
     skript = os.path.join(tempfile.gettempdir(), "edgy_update.bat")
     with open(skript, "w", encoding="mbcs" if os.name == "nt" else "utf-8") as f:

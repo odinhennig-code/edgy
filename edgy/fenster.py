@@ -939,6 +939,14 @@ class EdgyFenster:
                     self._schreibe(text, self._farb_tag(farbe))
                 elif art == "leeren":
                     self._leeren()
+                elif art == "update_start":
+                    self.update_bildschirm(inhalt)
+                elif art == "update_fortschritt":
+                    self.update_fortschritt(inhalt)
+                elif art == "update_fertig":
+                    self.update_fertig()
+                elif art == "update_fehler":
+                    self.update_fehler(inhalt)
                 elif art == "schliessen":
                     self.root.destroy()
                     return
@@ -962,15 +970,86 @@ class EdgyFenster:
             return
         if not gefunden:
             return
-        neu, url = gefunden
-        self.ausgaben.put(("info", f"⟳ Neue Version {neu} gefunden – wird geladen …"))
+        neu, url, groesse = gefunden
+        self.ausgaben.put(("update_start", neu))
         try:
-            update.installiere(url)
+            update.installiere(url, groesse, lambda a: self.ausgaben.put(("update_fortschritt", a)))
         except Exception as f:
-            self.ausgaben.put(("fehler", f"✕ Update fehlgeschlagen: {f}"))
+            self.ausgaben.put(("update_fehler", str(f)))
             return
-        self.ausgaben.put(("info", "⟳ Fertig – Edgy startet neu."))
-        self.ausgaben.put(("schliessen", None))
+        self.ausgaben.put(("update_fertig", None))
+
+    # Update-Bildschirm mit Ladebalken
+    BALKEN_BREITE = 340
+
+    def update_bildschirm(self, neu):
+        self.geist_konsole.weg()
+        o = tk.Frame(self.root, bg=HINTERGRUND)
+        o.place(x=0, y=0, relwidth=1, relheight=1)
+        o.lift()
+        self._update_ebene = o
+        mitte = tk.Frame(o, bg=HINTERGRUND)
+        mitte.place(relx=0.5, rely=0.46, anchor="center")
+        try:
+            self._update_logo = tk.PhotoImage(file=ressource("update_logo.png"))
+            tk.Label(mitte, image=self._update_logo, bg=HINTERGRUND).pack(pady=(0, 26))
+        except Exception:
+            pass
+        self._u_titel = tk.Label(mitte, text=f"Update auf {neu}", font=("Segoe UI Semibold", 17),
+                                 fg=TEXT, bg=HINTERGRUND)
+        self._u_titel.pack()
+        self._u_text = tk.Label(mitte, text="Die neue Version wird geladen …", font=("Segoe UI", 10),
+                                fg=HELLGRAU, bg=HINTERGRUND)
+        self._u_text.pack(pady=(6, 26))
+        self._u_balken = tk.Canvas(mitte, width=self.BALKEN_BREITE, height=4, bg=LINIE,
+                                   highlightthickness=0, bd=0)
+        self._u_balken.pack()
+        self._u_prozent = tk.Label(mitte, text="0 %", font=("Segoe UI", 9), fg=GRAU, bg=HINTERGRUND)
+        self._u_prozent.pack(pady=(10, 0))
+        self._u_ziel = 0.0
+        self._u_wert = 0.0
+        self._u_fertig = False
+        self._update_animation()
+
+    def update_fortschritt(self, anteil):
+        self._u_ziel = max(self._u_ziel, min(float(anteil), 1.0))
+
+    def update_fertig(self):
+        self._u_ziel = 1.0
+        self._u_fertig = True
+
+    def _update_animation(self):
+        if not getattr(self, "_update_ebene", None):
+            return
+        self._u_wert += (self._u_ziel - self._u_wert) * 0.18
+        if self._u_ziel - self._u_wert < 0.002:
+            self._u_wert = self._u_ziel
+        breite = int(self.BALKEN_BREITE * self._u_wert)
+        self._u_balken.delete("all")
+        if breite > 0:
+            self._u_balken.create_rectangle(0, 0, breite, 4, fill=GOLD, width=0)
+        self._u_prozent.configure(text=f"{int(self._u_wert * 100)} %")
+        if self._u_fertig and self._u_wert >= 1.0:
+            self._u_titel.configure(text="Programm wird neu gestartet …")
+            self._u_text.configure(text="Gleich geht's weiter.")
+            self._u_fertig = False
+            if not getattr(self, "_nur_test", False):
+                self.root.after(1400, self.root.destroy)
+            return
+        self.root.after(16, self._update_animation)
+
+    def update_fehler(self, meldung):
+        if not getattr(self, "_update_ebene", None):
+            return
+        self._u_titel.configure(text="Update hat nicht geklappt", fg=ROT)
+        self._u_text.configure(text=meldung[:120])
+        self.root.after(3500, self.update_weg)
+
+    def update_weg(self):
+        ebene = getattr(self, "_update_ebene", None)
+        if ebene:
+            ebene.destroy()
+            self._update_ebene = None
 
     def start(self):
         self.root.mainloop()

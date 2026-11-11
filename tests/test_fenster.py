@@ -139,6 +139,18 @@ assert pfad.startswith("file:") and pfad.endswith(".html"), pfad
 assert "Seite geöffnet" in konsole()
 foto("6_webseite")
 
+# --- Update-Bildschirm
+f._nur_test = True
+f.update_bildschirm("v9.9.9")
+f.update_fortschritt(0.6)
+pumpe(1.0)
+foto("7_update_laedt")
+f.update_fertig()
+assert warte_auf(lambda: "neu gestartet" in f._u_titel.cget("text"))
+pumpe(0.3)
+foto("8_update_neustart")
+f.update_weg()
+
 f.editor.edit_modified(False)
 r.destroy()
 print("Fenster-Test bestanden.")
