@@ -1,5 +1,5 @@
 # Bei jedem Update hochzählen – GitHub baut dann automatisch eine neue Edgy.exe
-VERSION = "0.3.1"
+VERSION = "0.4.0"
 
 # Wo die fertigen Versionen liegen (für das Auto-Update)
 GITHUB_REPO = "odinhennig-code/edgy"
