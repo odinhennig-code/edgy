@@ -270,6 +270,51 @@ class Geist:
         return None
 
 
+class DuenneLeiste(tk.Canvas):
+    """Schmale, unauffällige Scrollleiste (die von Windows ist zu dick und weiß)."""
+
+    def __init__(self, eltern, ziel):
+        super().__init__(eltern, width=6, bg=HINTERGRUND, highlightthickness=0, bd=0, cursor="arrow")
+        self.ziel = ziel
+        self.anfang, self.ende = 0.0, 1.0
+        self.ueber = False
+        self.bind("<Configure>", lambda e: self._zeichne())
+        self.bind("<Enter>", lambda e: self._hover(True))
+        self.bind("<Leave>", lambda e: self._hover(False))
+        self.bind("<ButtonPress-1>", self._klick)
+        self.bind("<B1-Motion>", self._ziehen)
+        self.bind("<MouseWheel>", lambda e: ziel.yview_scroll(int(-e.delta / 120) * 3, "units"))
+
+    def set(self, anfang, ende):
+        self.anfang, self.ende = float(anfang), float(ende)
+        self._zeichne()
+
+    def _hover(self, ja):
+        self.ueber = ja
+        self._zeichne()
+
+    def _zeichne(self):
+        self.delete("all")
+        if self.ende - self.anfang >= 0.999:
+            return
+        h = self.winfo_height()
+        y0 = max(int(self.anfang * h), 0)
+        y1 = max(int(self.ende * h), y0 + 24)
+        self.create_rectangle(1, y0, 5, y1, fill="#4a4a50" if self.ueber else "#2c2c31", width=0)
+
+    def _klick(self, e):
+        self._start_y = e.y
+        self._start_anfang = self.anfang
+        h = max(self.winfo_height(), 1)
+        if not self.anfang * h <= e.y <= self.ende * h:
+            self.ziel.yview_moveto(max(e.y / h - (self.ende - self.anfang) / 2, 0))
+            self._start_anfang = float(self.ziel.yview()[0])
+
+    def _ziehen(self, e):
+        h = max(self.winfo_height(), 1)
+        self.ziel.yview_moveto(self._start_anfang + (e.y - self._start_y) / h)
+
+
 def _knopf(eltern, text, befehl, farbe=HELLGRAU, hover=TEXT, fett=False):
     l = tk.Label(eltern, text=text, fg=farbe, bg=HINTERGRUND, cursor="hand2",
                  font=("Segoe UI Semibold" if fett else "Segoe UI", 10), padx=8, pady=2)
@@ -398,10 +443,7 @@ class EdgyFenster:
         return t
 
     def _leiste(self, eltern, ziel):
-        leiste = tk.Scrollbar(eltern, command=ziel.yview, bg=HINTERGRUND, troughcolor=HINTERGRUND,
-                              bd=0, highlightthickness=0, activebackground=GRAU, width=8,
-                              relief="flat", elementborderwidth=0)
-        return leiste
+        return DuenneLeiste(eltern, ziel)
 
     def _baue_konsole(self):
         self.konsole = tk.Frame(self.koerper, bg=HINTERGRUND)

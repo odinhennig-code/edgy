@@ -19,19 +19,20 @@ Updates kommen automatisch: Edgy schaut beim Start nach einer neuen Version und 
 ## So sieht Edgy aus
 
 ```
-gib aus "Hallo Welt!"
-
 frag name "Wie heißt du?"
-gib aus "Hi " + name
+farbe "gold"
+gib aus "Hi " + name + "!"
+farbe "normal"
 
-wenn name ist "Max" dann
-  gib aus "Kenn ich!"
-sonst
-  gib aus "Neu hier?"
+zähl i von 1 bis 3
+  gib aus "Runde " + i
 ende
 
-wiederhol 3 mal
-  gib aus "Edgy ist scharf."
+merk wurf = zufall(1, 6)
+wenn wurf == 6 dann
+  gib aus "Eine 6!"
+sonst
+  gib aus "Gewürfelt: " + wurf
 ende
 ```
 
@@ -44,18 +45,51 @@ ende
 | `gib aus "Text"` | Text anzeigen |
 | `merk name = wert` | Etwas speichern |
 | `frag name "Frage?"` | Den Nutzer etwas fragen |
+| `farbe "rot"` | Ausgabe einfärben (`"normal"` = zurück) |
+| `leere` | Fenster leeren |
+| `warte 2` | 2 Sekunden warten |
 | `wenn ... dann` / `sonst` / `ende` | Entscheidung |
 | `wiederhol 3 mal` / `ende` | Schleife |
+| `solange x < 10` / `ende` | Schleife mit Bedingung |
+| `zähl i von 1 bis 10` / `ende` | Zählschleife |
+| `abbrechen` | Schleife verlassen |
 | `# ...` | Kommentar |
+
+**Funktionen:** `zufall(1, 6)` `länge(text)` `groß(text)` `klein(text)` `runde(3.7)` `wurzel(16)` `zahl("5")` `text(5)` `uhrzeit()` `datum()`
 
 Rechnen: `+ - * / %` · Vergleichen: `== != < > <= >= ist` · Logik: `und oder nicht wahr falsch`
 
-Im Fenster außerdem: `hilfe`, `beispiel`, `öffne`, `leeren`, `beenden` · **Esc** stoppt ein laufendes Programm.
+---
+
+## Webseiten bauen
+
+```
+seite "Meine Seite"
+hintergrund "schwarz"
+textfarbe "weiß"
+überschrift "Hallo, Welt!"
+absatz "Gebaut mit Edgy."
+knopf "Zu Google" zu "https://google.de"
+```
+
+Beim Start öffnet sich die Seite automatisch im Browser. Weitere Befehle: `link "Text" zu "url"`, `bild "url"`, `trennlinie`, `zeig seite`.
+
+---
+
+## Das Fenster
+
+- **Konsole** – Befehle direkt eintippen
+- **Editor** – ganze Programme schreiben, mit Farben, Zeilennummern und automatischem Einrücken
+- **Vorschläge** – beim Tippen erscheint grau ein Vorschlag, **Tab** übernimmt ihn
+- **Neu / Öffnen / Speichern** – `.edgy`-Dateien landen in *Dokumente\Edgy*
+- **▶ Start** oder **F5** – Editor-Code ausführen · **Esc** stoppt
+
+Konsolen-Befehle: `hilfe`, `beispiel`, `webseite`, `editor`, `öffne`, `leeren`, `version`, `beenden`
 
 ---
 
 ## Neue Version rausbringen
 
 1. Code ändern
-2. In `edgy/version.py` die Nummer hochzählen (z. B. `0.1.0` → `0.2.0`)
-3. Hochladen – GitHub baut die neue `Edgy.exe` automatisch
+2. In `edgy/version.py` die Nummer hochzählen (z. B. `0.2.0` → `0.3.0`)
+3. Hochladen – GitHub testet alles und baut die neue `Edgy.exe` automatisch
