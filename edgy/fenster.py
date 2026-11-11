@@ -41,7 +41,7 @@ SYNTAX = {"kw": "#ff5c5c", "fn": "#ff9f5a", "str": "#ffce00", "num": "#9ad0ff", 
 
 FENSTER_BEFEHLE = ["hilfe", "beispiel", "webseite", "editor", "öffne", "leeren", "version", "beenden"]
 IGNORIEREN = {"__pycache__", "node_modules", ".git", "$RECYCLE.BIN", "desktop.ini"}
-UMBAU_SCHLUESSEL = "umbau_film_0_4"
+UMBAU_SCHLUESSEL = "umbau_film_mit_ton_0_4"
 
 HILFE = """\
 AUSGABE & EINGABE
@@ -987,17 +987,48 @@ class EdgyFenster:
 
     # ------------------------------------------------------------ Der Umbau-Film (läuft nur einmal)
     #
-    #  0,0 s  Intro: Kachel ploppt auf, drei Streifen fliegen rein, "Edgy"
-    #  3,3 s  Das alte kleine Edgy (nur Konsole)
-    #  5,0 s  Chat fährt rein: "Was könnte man hier verbessern?"
-    #  8,3 s  Antwort: Explorer, Tabs, Vorschläge, Konsole, viel mehr
-    # 16,1 s  "Umbauen" wird gedrückt, Chat fährt raus
-    # 17,0 s  Umbau: Fenster wächst, Icons, Explorer, Konsole, Editor
-    # 21,3 s  Karte: "Jetzt sieht's besser aus."
-    # 25,4 s  Fertig
-    FILM_UMBAU = 17000
-    FILM_SPRUCH = FILM_UMBAU + 4300
-    FILM_ENDE = FILM_SPRUCH + 4100
+    # Alle Zeiten in Millisekunden ab Start – passend zum Sprecher (assets/intro.wav, 100 s).
+    #   0,0  "Das ist Edgy. Meine eigene Programmiersprache."      -> Intro-Kachel
+    #   6,4  "Angefangen hat alles mit einem kleinen Fenster …"   -> altes Edgy
+    #  23,5  "Also hab ich … gefragt: Was könnte man verbessern?" -> Chat
+    #  29,9  "Erstens / Zweitens / Drittens / Viertens / mehr"    -> Antwort-Punkte
+    #  69,4  "Dann bauen wir das jetzt um."                       -> Umbauen
+    #  72,0  "Das Fenster wird größer …"                          -> Umbau
+    #  90,6  "Jetzt sieht's besser aus."                          -> Spruch-Karte
+    #  92,2  "Das ist Edgy null Punkt vier …"                     -> Ende
+    FILM = {
+        "intro_wisch": 6000,
+        "willkommen": 6600,
+        "befehl": 10400,
+        "hallo_welt": 13350,
+        "fehler_befehl": 21700,
+        "chat_rein": 23500,
+        "frage": 25740,
+        "ki_tippt": 27600,
+        "antwort": 29000,
+        "punkte": [29900, 37380, 45550, 54370, 60080],
+        "details": [34170, 39600, 49540, 56500, 62400],
+        "umbauen_zeigen": 66000,
+        "umbauen_druecken": 69450,
+        "chat_raus": 70000,
+        "umbau_text": 70500,
+        "fenster": 72030,
+        "icons": 73690,
+        "explorer": 76660,
+        "konsole": 79690,
+        "tabs": 81520,
+        "willkommen_ein": 83980,
+        "statusleiste": 85600,
+        "fertig_text": 86290,
+        "spruch": 89900,
+        "spruch_weg": 92500,
+        "neue_datei": 94320,
+        "starten": 96900,
+        "ende": 100300,
+    }
+    FILM_UMBAU = 70500
+    FILM_SPRUCH = 89900
+    FILM_ENDE = 100300
 
     def _umbau_vorbereiten(self):
         """Startzustand: sieht aus wie das alte kleine Edgy (nur Konsole)."""
@@ -1049,7 +1080,7 @@ class EdgyFenster:
         return c.create_polygon(punkte, smooth=True, **kw)
 
     def _baue_chat(self):
-        b = self.chat_breite = self.px(390)
+        b = self.chat_breite = self.px(400)
         blase = "#202026"
         ch = self.chat = tk.Frame(self.root, bg=SEITE, highlightthickness=1, highlightbackground=LINIE)
         ch.place(relx=1, x=0, y=self.px(58), width=b, relheight=1, height=-self.px(100))
@@ -1072,22 +1103,27 @@ class EdgyFenster:
                                  fg=SEITE, bg=SEITE, anchor="w")
         self.ki_intro.pack(fill="x", pady=(0, self.px(10)))
         self.ki_punkte = []
-        for icon, text in (
-            ("explorer_weiss", "Ein Explorer für Dateien und Ordner"),
-            ("datei_weiss", "Tabs für mehrere offene Dateien"),
-            ("suche_weiss", "Vorschläge beim Tippen – mit Tab"),
-            ("konsole_weiss", "Die Konsole nach unten"),
-            ("web_weiss", "… und noch viel, viel mehr."),
+        for icon, text, detail in (
+            ("explorer_weiss", "Ein Explorer für Dateien und Ordner", "Neue Datei · Ordner · Umbenennen · Löschen"),
+            ("datei_weiss", "Tabs für mehrere offene Dateien", "Zwischen Dateien hin und her springen"),
+            ("suche_weiss", "Vorschläge beim Tippen – mit Tab", "g  →  gib aus      (Tab drücken)"),
+            ("konsole_weiss", "Die Konsole nach unten", "Ausgabe sehen und Befehle tippen"),
+            ("web_weiss", "… und noch viel, viel mehr.", "Farben · Zeilennummern · Webseiten · Auto-Updates"),
         ):
             zeile = tk.Frame(self.blase_ki, bg=SEITE)
             zeile.pack(fill="x", pady=self.px(5))
-            marke = tk.Frame(zeile, bg=SEITE, width=self.px(3), height=self.px(22))
-            marke.pack(side="left", padx=(0, self.px(10)))
+            marke = tk.Frame(zeile, bg=SEITE, width=self.px(3), height=self.px(38))
+            marke.pack(side="left", padx=(0, self.px(10)), fill="y")
             bild = tk.Label(zeile, image=self._leer_bild, bg=SEITE, width=self.px(16), height=self.px(16))
-            bild.pack(side="left", padx=(0, self.px(10)))
-            label = tk.Label(zeile, text=text, font=self.ui_schrift, fg=SEITE, bg=SEITE, anchor="w")
-            label.pack(side="left")
-            self.ki_punkte.append({"zeile": zeile, "marke": marke, "bild": bild, "icon": icon, "label": label})
+            bild.pack(side="left", padx=(0, self.px(10)), anchor="n", pady=(self.px(2), 0))
+            texte = tk.Frame(zeile, bg=SEITE)
+            texte.pack(side="left", fill="x")
+            label = tk.Label(texte, text=text, font=self.ui_schrift, fg=SEITE, bg=SEITE, anchor="w")
+            label.pack(anchor="w")
+            unter = tk.Label(texte, text=detail, font=self.ui_schrift_klein, fg=SEITE, bg=SEITE, anchor="w")
+            unter.pack(anchor="w")
+            self.ki_punkte.append({"zeile": zeile, "marke": marke, "bild": bild, "icon": icon,
+                                   "label": label, "detail": unter})
         self.umbau_knopf = tk.Label(self.blase_ki, text="  Umbauen  ›  ", font=self.ui_schrift_fett,
                                     fg=SEITE, bg=SEITE, padx=self.px(10), pady=self.px(6))
         self.umbau_knopf.pack(anchor="w", pady=(self.px(14), 0))
@@ -1122,61 +1158,82 @@ class EdgyFenster:
         except Exception:
             pass
 
+    def _pulsieren(self, widgets, farbe, nach_ms, dauer=900):
+        """Lässt Widgets kurz in einer Farbe aufleuchten (Hintergrund)."""
+        def start():
+            original = [(w, w.cget("bg")) for w in widgets]
+
+            def setze(t):
+                staerke = 1 - abs(2 * t - 1)
+                for w, bg in original:
+                    w.configure(bg=mische(bg, farbe, staerke * 0.85))
+            self.film.los(dauer, 0, 1, setze, kurve=lambda t: t,
+                          fertig=lambda: [w.configure(bg=bg) for w, bg in original])
+        self.film.spaeter(nach_ms, start)
+
     def _umbau_abspielen(self):
         a = self.film
+        F = self.FILM
         self._ton(True)
         self._intro_karte()
 
         # Das alte, kleine Edgy
-        self._tippe("Willkommen bei Edgy.", "titel", 3300, 22)
-        self._tippe('› gib aus "Hallo Welt"', "ein", 4000, 22)
-        self._tippe("Hallo Welt", None, 4600, 22)
+        self._tippe("Willkommen bei Edgy.", "titel", F["willkommen"], 30)
+        self._tippe('› gib aus "Hallo Welt"', "ein", F["befehl"], 95)
+        self._tippe("Hallo Welt", None, F["hallo_welt"], 25)
+        self._tippe("› speichere datei", "ein", F["fehler_befehl"], 60)
+        self._tippe("✕ Den Befehl 'speichere' gibt es (noch) nicht.", "fehler", F["fehler_befehl"] + 1300, 12)
 
         # Chat fährt rein, Frage wird getippt
         b = self.chat_breite + self.px(16)
-        a.los(480, 0, -b, lambda v: self.chat.place_configure(x=int(v)), nach_ms=5000)
-        a.spaeter(5550, lambda: self.blase_nutzer.pack(anchor="e", pady=(self.px(10), self.px(14))))
-        self._tippe_label(self.blase_nutzer, "Was könnte man hier verbessern?", 5600)
+        a.los(520, 0, -b, lambda v: self.chat.place_configure(x=int(v)), nach_ms=F["chat_rein"])
+        a.spaeter(F["frage"] - 100, lambda: self.blase_nutzer.pack(anchor="e", pady=(self.px(10), self.px(14))))
+        self._tippe_label(self.blase_nutzer, "Was könnte man hier verbessern?", F["frage"], 55)
 
         # KI "tippt" …
         def punkte_animieren(schritt=0):
             if not self.ki_tippt.winfo_exists() or not self.ki_tippt.winfo_ismapped():
                 return
-            farben = [GRAU, GEIST, GEIST]
-            self.ki_tippt.configure(fg=farben[schritt % 3])
+            self.ki_tippt.configure(fg=[GRAU, GEIST, GEIST][schritt % 3])
             a.spaeter(180, lambda: punkte_animieren(schritt + 1))
-        a.spaeter(7300, lambda: (self.ki_tippt.pack(anchor="w", pady=self.px(4)), punkte_animieren()))
+        a.spaeter(F["ki_tippt"], lambda: (self.ki_tippt.pack(anchor="w", pady=self.px(4)), punkte_animieren()))
 
         def antwort_zeigen():
             self.ki_tippt.pack_forget()
             self.blase_ki.pack(anchor="w", fill="x")
-        a.spaeter(8300, antwort_zeigen)
-        a.los(400, 0, 1, lambda t: self.ki_intro.configure(fg=mische(SEITE, HELLGRAU, t)), nach_ms=8300)
+        a.spaeter(F["antwort"], antwort_zeigen)
+        a.los(450, 0, 1, lambda t: self.ki_intro.configure(fg=mische(SEITE, HELLGRAU, t)), nach_ms=F["antwort"])
 
-        # Die Punkte kommen einzeln, jeder blitzt kurz rot auf
-        for i, p in enumerate(self.ki_punkte):
-            t0 = 9000 + i * 1300
+        # Die Punkte kommen einzeln zum Sprecher, jeder blitzt rot auf
+        for p, t0, t_detail in zip(self.ki_punkte, F["punkte"], F["details"]):
             a.spaeter(t0, lambda p=p: (p["bild"].configure(image=self.icons(p["icon"])), p["marke"].configure(bg=DE_ROT)))
             a.los(450, 0, 1, lambda t, l=p["label"]: l.configure(fg=mische(SEITE, TEXT, t)), nach_ms=t0)
-            a.los(700, 0, 1, lambda t, m=p["marke"]: m.configure(bg=mische(DE_ROT, LINIE, t)), nach_ms=t0 + 500)
+            a.los(450, 0, 1, lambda t, l=p["detail"]: l.configure(fg=mische(SEITE, GRAU, t)), nach_ms=t_detail)
+            a.los(1400, 0, 1, lambda t, m=p["marke"]: m.configure(bg=mische(DE_ROT, LINIE, t)), nach_ms=t0 + 900)
 
         # "Umbauen" erscheint und wird gedrückt
-        a.los(400, 0, 1, lambda t: self.umbau_knopf.configure(fg=mische(SEITE, TEXT, t), bg=mische(SEITE, "#2a1416", t)),
-              nach_ms=15300)
-        a.spaeter(16100, lambda: self.umbau_knopf.configure(bg=DE_ROT, fg="#ffffff"))
-        a.los(450, -b, 0, lambda v: self.chat.place_configure(x=int(v)), nach_ms=16500,
+        a.los(450, 0, 1, lambda t: self.umbau_knopf.configure(fg=mische(SEITE, TEXT, t), bg=mische(SEITE, "#2a1416", t)),
+              nach_ms=F["umbauen_zeigen"])
+        a.spaeter(F["umbauen_druecken"], lambda: self.umbau_knopf.configure(bg=DE_ROT, fg="#ffffff"))
+        a.los(480, -b, 0, lambda v: self.chat.place_configure(x=int(v)), nach_ms=F["chat_raus"],
               kurve=weich_rein_raus, fertig=self.chat.destroy)
 
-        self._umbau_teil(self.FILM_UMBAU)
-        self._spruch_karte(self.FILM_SPRUCH)
-        a.spaeter(self.FILM_ENDE, self._umbau_fertig)
+        self._umbau_teil()
+        self._spruch_karte(F["spruch"])
+
+        # Schluss: "Mach eine neue Datei auf … drück auf Starten"
+        if self.willkommen_teile:
+            neue_datei = self.willkommen_teile[2][0]   # Text "Neue Datei"
+            self._pulsieren([neue_datei.master] + list(neue_datei.master.winfo_children()), "#3a2a08", F["neue_datei"], 1400)
+        self._pulsieren([self.start_knopf] + list(self.start_knopf.winfo_children()), "#4a1214", F["starten"], 1400)
+        a.spaeter(F["ende"], self._umbau_fertig)
 
     def _intro_karte(self):
         a = self.film
         c = self.karte
         c.update_idletasks()
         W, H = c.winfo_width(), c.winfo_height()
-        cx, cy = W // 2, H // 2 - self.px(30)
+        cx, cy = W // 2, H // 2 - self.px(40)
         k = self.px(56)
         fam = self.ui_schrift.actual("family")
 
@@ -1193,7 +1250,7 @@ class EdgyFenster:
             if s > 2:
                 self._rund(c, cx - s, cy - s, cx + s, cy + s, max(s * 0.44, 1), fill="#fafafa", outline="", tags="kachel")
             c.tag_raise("balken")
-        a.los(520, 0, 1, kachel, nach_ms=300, kurve=federn)
+        a.los(520, 0, 1, kachel, nach_ms=150, kurve=federn)
 
         # Drei Balken fliegen von links in die Kachel
         bw, bh, gap = k * 1.24, k * 0.28, k * 0.18
@@ -1202,24 +1259,28 @@ class EdgyFenster:
             y = y0 + i * (bh + gap)
             it = c.create_rectangle(-bw, y, 0, y + bh, fill=farbe, width=0, tags="balken")
             a.los(480, -bw - self.px(60), cx - bw / 2,
-                  lambda v, it=it, y=y: c.coords(it, v, y, v + bw, y + bh), nach_ms=750 + i * 130, kurve=federn)
+                  lambda v, it=it, y=y: c.coords(it, v, y, v + bw, y + bh), nach_ms=450 + i * 130, kurve=federn)
 
         titel = c.create_text(cx, cy + k + self.px(42), text="Edgy", fill=HINTERGRUND, font=(fam, 30, "bold"))
-        a.los(500, 0, 1, lambda t: c.itemconfigure(titel, fill=mische(HINTERGRUND, TEXT, t)), nach_ms=1300)
-        a.los(500, self.px(14), 0, lambda v: c.coords(titel, cx, cy + k + self.px(42) + v), nach_ms=1300)
-        unter = c.create_text(cx, cy + k + self.px(84), text="Deine eigene Programmiersprache",
-                              fill=HINTERGRUND, font=(fam, 11))
-        a.los(500, 0, 1, lambda t: c.itemconfigure(unter, fill=mische(HINTERGRUND, HELLGRAU, t)), nach_ms=1600)
+        a.los(500, 0, 1, lambda t: c.itemconfigure(titel, fill=mische(HINTERGRUND, TEXT, t)), nach_ms=650)
+        a.los(500, self.px(14), 0, lambda v: c.coords(titel, cx, cy + k + self.px(42) + v), nach_ms=650)
+        unter = c.create_text(cx, cy + k + self.px(84), text="Meine eigene Programmiersprache",
+                              fill=HINTERGRUND, font=(fam, 12))
+        a.los(500, 0, 1, lambda t: c.itemconfigure(unter, fill=mische(HINTERGRUND, HELLGRAU, t)), nach_ms=1100)
+        dazu = c.create_text(cx, cy + k + self.px(114), text="Komplett auf Deutsch  ·  komplett selbst gebaut",
+                             fill=HINTERGRUND, font=(fam, 10))
+        a.los(500, 0, 1, lambda t: c.itemconfigure(dazu, fill=mische(HINTERGRUND, GRAU, t)), nach_ms=3750)
 
         # Karte wischt nach oben weg
-        a.los(560, 0, H, lambda v: self.karte.place_configure(y=-int(v)), nach_ms=2750,
+        a.los(600, 0, H, lambda v: self.karte.place_configure(y=-int(v)), nach_ms=self.FILM["intro_wisch"],
               kurve=weich_rein_raus, fertig=self.karte.destroy)
 
-    def _umbau_teil(self, t0):
+    def _umbau_teil(self):
         a = self.film
-        self._tippe("› Edgy wird umgebaut …", "info", t0, 18)
+        F = self.FILM
+        self._tippe("› Edgy wird umgebaut …", "info", F["umbau_text"], 22)
 
-        # 1) Fenster wächst
+        # 1) "Das Fenster wird größer."
         def geo_start():
             start_geo = (self.root.winfo_width(), self.root.winfo_height(), self.root.winfo_x(), self.root.winfo_y())
             ziel = self._zielgroesse()
@@ -1227,39 +1288,40 @@ class EdgyFenster:
             def geo(t):
                 w, h, x, y = (int(s + (z - s) * t) for s, z in zip(start_geo, ziel))
                 self.root.geometry(f"{w}x{h}+{x}+{y}")
-            a.los(750, 0, 1, geo, kurve=weich_rein_raus)
-        a.spaeter(t0 + 200, geo_start)
+            a.los(1000, 0, 1, geo, kurve=weich_rein_raus)
+        a.spaeter(F["fenster"], geo_start)
 
-        # 2) Aktivitätsleiste schiebt sich rein, Icons rutschen nacheinander (mit Federn)
-        a.los(380, 0, self.px(48), lambda v: self.aktivitaet.configure(width=max(int(v), 1)), nach_ms=t0 + 850)
+        # 2) "Links schieben sich die Icons rein, eins nach dem anderen."
+        a.los(380, 0, self.px(48), lambda v: self.aktivitaet.configure(width=max(int(v), 1)), nach_ms=F["icons"] - 300)
         for i, e in enumerate(self.aktiv_icons):
-            a.los(480, -self.px(50), 0, lambda v, r=e["rahmen"]: r.place_configure(x=int(v)),
-                  nach_ms=t0 + 1100 + i * 110, kurve=federn)
-        a.spaeter(t0 + 1100 + len(self.aktiv_icons) * 110 + 400, self._aktiv_icons_faerben)
+            a.los(520, -self.px(50), 0, lambda v, r=e["rahmen"]: r.place_configure(x=int(v)),
+                  nach_ms=F["icons"] + i * 330, kurve=federn)
+        a.spaeter(F["icons"] + len(self.aktiv_icons) * 330 + 500, self._aktiv_icons_faerben)
 
-        # 3) Explorer klappt auf, Dateien kommen nacheinander
-        a.los(520, 0, self.seiten_breite, lambda v: self.seitenleiste.configure(width=max(int(v), 1)),
-              nach_ms=t0 + 1400,
+        # 3) "Der Explorer klappt auf, und deine Dateien tauchen auf."
+        a.los(600, 0, self.seiten_breite, lambda v: self.seitenleiste.configure(width=max(int(v), 1)),
+              nach_ms=F["explorer"],
               fertig=lambda: self.seiten_trenner.pack(side="left", fill="y", after=self.seitenleiste))
-        a.spaeter(t0 + 1650, lambda: self.baum_laden(nacheinander=True))
+        a.spaeter(F["explorer"] + 900, lambda: self.baum_laden(nacheinander=True))
 
-        # 4) Konsole rutscht nach unten, Editor erscheint, Tab-Leiste kommt
+        # 4) "Die Konsole rutscht nach unten."
         def konsole_rutscht():
             self._panel_hoehe_anpassen()
-            a.los(700, self.panel.winfo_height(), self.panel_hoehe,
+            a.los(900, self.panel.winfo_height(), self.panel_hoehe,
                   lambda v: self.panel.configure(height=int(v)), kurve=weich_rein_raus)
-        a.spaeter(t0 + 2000, konsole_rutscht)
-        a.los(300, 0, self.px(36), lambda v: self.tableiste_rahmen.configure(height=max(int(v), 1)),
-              nach_ms=t0 + 2500)
-        for i, (teil, farbe) in enumerate(self.willkommen_teile):
-            a.los(420, 0, 1, lambda t, w=teil, f=farbe: w.configure(fg=mische(HINTERGRUND, f, t)),
-                  nach_ms=t0 + 2600 + i * 70)
-        for i, (bild, name) in enumerate(self.willkommen_bilder):
-            a.spaeter(t0 + 2600 + i * 140, lambda b=bild, n=name: b.configure(image=self.icons(n)))
+        a.spaeter(F["konsole"], konsole_rutscht)
 
-        # 5) Statusleiste
-        a.los(260, 0, self.px(26), lambda v: self.statusleiste.configure(height=max(int(v), 1)),
-              nach_ms=t0 + 3300)
+        # 5) "Oben kommt die Tab-Leiste, und in der Mitte ist endlich Platz für den Editor."
+        a.los(350, 0, self.px(36), lambda v: self.tableiste_rahmen.configure(height=max(int(v), 1)),
+              nach_ms=F["tabs"])
+        for i, (teil, farbe) in enumerate(self.willkommen_teile):
+            a.los(450, 0, 1, lambda t, w=teil, f=farbe: w.configure(fg=mische(HINTERGRUND, f, t)),
+                  nach_ms=F["willkommen_ein"] + i * 90)
+        for i, (bild, name) in enumerate(self.willkommen_bilder):
+            a.spaeter(F["willkommen_ein"] + i * 170, lambda b=bild, n=name: b.configure(image=self.icons(n)))
+        a.los(280, 0, self.px(26), lambda v: self.statusleiste.configure(height=max(int(v), 1)),
+              nach_ms=F["statusleiste"])
+        self._tippe("✓ Umbau fertig.", "titel", F["fertig_text"], 30)
 
     def _spruch_karte(self, t0):
         """Große Text-Karte: "Jetzt sieht's besser aus." – Wort für Wort."""
@@ -1290,20 +1352,19 @@ class EdgyFenster:
                 def pop(t, it=it, farbe=farbe):
                     k.itemconfigure(it, fill=mische(HINTERGRUND, farbe, min(t * 1.6, 1)),
                                     font=(fam, max(int(groesse * (1.9 - 0.9 * t)), 1), "bold"))
-                a.los(380, 0, 1, pop, nach_ms=550 + i * 290, kurve=federn)
+                a.los(360, 0, 1, pop, nach_ms=650 + i * 260, kurve=federn)
                 if wort == "besser":
                     linie = k.create_rectangle(x, y + self.px(34), x, y + self.px(39), fill=DE_ROT, width=0)
                     a.los(420, 0, breite, lambda v, linie=linie, x0=x: k.coords(linie, x0, y + self.px(34),
                                                                                  x0 + v, y + self.px(39)),
-                          nach_ms=1900)
+                          nach_ms=1700)
                 x += breite + abstand
 
-            # Kleine Flaggen-Linie unten
             for i, f in enumerate(("#1b1b1b", DE_ROT, GOLD)):
                 k.create_rectangle(W / 2 - self.px(45) + i * self.px(30), y + self.px(90),
                                    W / 2 - self.px(15) + i * self.px(30), y + self.px(93), fill=f, width=0)
 
-            a.los(500, 0, H, lambda v: k.place_configure(y=-int(v)), nach_ms=3300,
+            a.los(550, 0, H, lambda v: k.place_configure(y=-int(v)), nach_ms=self.FILM["spruch_weg"] - t0,
                   kurve=weich_rein_raus, fertig=k.destroy)
         a.spaeter(t0, start)
 
@@ -1337,10 +1398,12 @@ class EdgyFenster:
             teil.configure(fg=farbe)
         for bild, name in self.willkommen_bilder:
             bild.configure(image=self.icons(name))
+        for w in [self.start_knopf] + list(self.start_knopf.winfo_children()):
+            w.configure(bg=LEISTE)
         self.baum_laden()
         self._aktiv_icons_faerben()
-        if not self.anzeige.get("1.0", "end").strip():
-            self._begruessung()
+        self._leeren()
+        self._begruessung()
         self._umbau_fertig()
 
     def _umbau_fertig(self):

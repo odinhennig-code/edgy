@@ -65,13 +65,17 @@ def foto(f, name):
 # =============================================================== 1) Umbau-Film
 f = fenster.EdgyFenster(umbau=True)
 start = time.time()
-U, S = fenster.EdgyFenster.FILM_UMBAU / 1000, fenster.EdgyFenster.FILM_SPRUCH / 1000
-for zeit, name in [(0.75, "film_kachel"), (2.3, "film_intro"), (3.0, "film_wisch"), (4.9, "film_altes_edgy"),
-                   (7.2, "film_frage"), (12.6, "film_antwort"), (16.2, "film_umbauen_knopf"),
-                   (U + 0.6, "film_fenster_waechst"), (U + 1.6, "film_icons_explorer"),
-                   (U + 2.5, "film_konsole_rutscht"), (U + 3.8, "film_editor"),
-                   (S + 1.0, "film_spruch_halb"), (S + 2.6, "film_spruch"), (S + 3.6, "film_wisch_weg"),
-                   (fenster.EdgyFenster.FILM_ENDE / 1000 + 0.8, "film_fertig")]:
+F = fenster.EdgyFenster.FILM
+punkte = [(0.9, "film_kachel"), (4.2, "film_intro"), (6.3, "film_wisch"), (14.0, "film_altes_edgy"),
+          (23.4, "film_fehler")]
+punkte += [((F["frage"] + 2000) / 1000, "film_frage"), ((F["punkte"][1] + 800) / 1000, "film_punkt2"),
+           ((F["details"][4] + 900) / 1000, "film_alle_punkte"), ((F["umbauen_druecken"] + 300) / 1000, "film_umbauen"),
+           ((F["fenster"] + 600) / 1000, "film_fenster_waechst"), ((F["icons"] + 900) / 1000, "film_icons"),
+           ((F["explorer"] + 1500) / 1000, "film_explorer"), ((F["konsole"] + 500) / 1000, "film_konsole_rutscht"),
+           ((F["statusleiste"] + 600) / 1000, "film_umgebung"), ((F["spruch"] + 2500) / 1000, "film_spruch"),
+           ((F["neue_datei"] + 600) / 1000, "film_neue_datei"), ((F["starten"] + 650) / 1000, "film_starten"),
+           (F["ende"] / 1000 + 0.8, "film_fertig")]
+for zeit, name in punkte:
     while time.time() - start < zeit:
         f.root.update()
         time.sleep(0.004)
