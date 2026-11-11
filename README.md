@@ -76,15 +76,18 @@ Beim Start öffnet sich die Seite automatisch im Browser. Weitere Befehle: `link
 
 ---
 
-## Das Fenster
+## Die Entwicklungsumgebung
 
-- **Konsole** – Befehle direkt eintippen
-- **Editor** – ganze Programme schreiben, mit Farben, Zeilennummern und automatischem Einrücken
+- **Explorer** links – Ordner und Dateien, mit Rechtsklick: neue Datei, neuer Ordner, umbenennen, löschen (Papierkorb)
+- **Tabs** – mehrere Dateien gleichzeitig offen, ● zeigt ungespeicherte Änderungen
+- **Editor** – Farben, Zeilennummern, automatisches Einrücken
 - **Vorschläge** – beim Tippen erscheint grau ein Vorschlag, **Tab** übernimmt ihn
-- **Neu / Öffnen / Speichern** – `.edgy`-Dateien landen in *Dokumente\Edgy*
-- **▶ Start** oder **F5** – Editor-Code ausführen · **Esc** stoppt
+- **Konsole** unten – Ausgaben sehen und Befehle direkt eintippen
+- **▶ Starten** oder **F5** – Datei ausführen · **Esc** stoppt
 
-Konsolen-Befehle: `hilfe`, `beispiel`, `webseite`, `editor`, `öffne`, `leeren`, `version`, `beenden`
+Tasten: `Strg+N` neue Datei · `Strg+S` speichern · `Strg+O` öffnen · `Strg+W` Tab schließen · `Strg+B` Explorer · `Strg+J` Konsole · `Strg+Tab` nächster Tab
+
+Standard-Ordner: *Dokumente\Edgy* (oben im Explorer kannst du einen anderen Ordner öffnen).
 
 ---
 

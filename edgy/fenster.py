@@ -797,10 +797,18 @@ class EdgyFenster:
     def _baue_willkommen(self):
         w = self.willkommen = tk.Frame(self.editor_flaeche, bg=HINTERGRUND)
         mitte = tk.Frame(w, bg=HINTERGRUND)
-        mitte.place(relx=0.5, rely=0.44, anchor="center")
+        mitte.place(relx=0.5, rely=0.5, anchor="center")
         self.willkommen_teile = []
         logo = tk.Label(mitte, image=self.icons("logo_gross"), bg=HINTERGRUND)
         logo.pack(pady=(0, self.px(18)))
+
+        def platz(e):
+            # Auf kleinen Bildschirmen das große Logo weglassen
+            if e.height < self.px(470) and logo.winfo_ismapped():
+                logo.pack_forget()
+            elif e.height >= self.px(470) and not logo.winfo_ismapped():
+                logo.pack(pady=(0, self.px(18)), before=titel)
+        w.bind("<Configure>", platz)
         titel = tk.Label(mitte, text="Edgy", font=(self.ui_schrift.actual("family"), 26, "bold"),
                          fg=TEXT, bg=HINTERGRUND)
         titel.pack()
@@ -934,6 +942,9 @@ class EdgyFenster:
         w, h, x, y = self._zielgroesse()
         self.root.geometry(f"{w}x{h}+{x}+{y}")
         self.root.minsize(self.px(720), self.px(460))
+        self.root.update_idletasks()
+        self._panel_hoehe_anpassen()
+        self.panel.configure(height=self.panel_hoehe)
         self.baum_laden()
         self._editor_anzeigen()
         self._aktiv_icons_faerben()
@@ -948,11 +959,12 @@ class EdgyFenster:
         bw, bh = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
         w, h = self.px(1000), self.px(640)
         self.root.geometry(f"{w}x{h}+{(bw - w) // 2}+{max((bh - h) // 2 - self.px(20), 0)}")
-        self.aktivitaet.configure(width=0)
-        self.seitenleiste.configure(width=0)
+        # Breite/Höhe 0 ignoriert Tk – darum 1 Pixel
+        self.aktivitaet.configure(width=1)
+        self.seitenleiste.configure(width=1)
         self.seiten_trenner.pack_forget()
-        self.tableiste_rahmen.configure(height=0)
-        self.statusleiste.configure(height=0)
+        self.tableiste_rahmen.configure(height=1)
+        self.statusleiste.configure(height=1)
         for e in self.aktiv_icons:
             e["rahmen"].place_configure(x=-self.px(50))
         for teil, _ in self.willkommen_teile:
@@ -996,27 +1008,30 @@ class EdgyFenster:
         a.los(750, 0, 1, geo, nach_ms=1500, kurve=weich_rein_raus)
 
         # 2) Aktivitätsleiste schiebt sich rein, Icons rutschen nacheinander
-        a.los(380, 0, self.px(48), lambda v: self.aktivitaet.configure(width=int(v)), nach_ms=2150)
+        a.los(380, 0, self.px(48), lambda v: self.aktivitaet.configure(width=max(int(v), 1)), nach_ms=2150)
         for i, e in enumerate(self.aktiv_icons):
             a.los(420, -self.px(50), 0, lambda v, r=e["rahmen"]: r.place_configure(x=int(v)),
                   nach_ms=2400 + i * 110)
         a.spaeter(2400 + len(self.aktiv_icons) * 110 + 300, self._aktiv_icons_faerben)
 
         # 3) Explorer klappt auf, Dateien kommen nacheinander
-        a.los(520, 0, self.seiten_breite, lambda v: self.seitenleiste.configure(width=int(v)), nach_ms=2700,
+        a.los(520, 0, self.seiten_breite, lambda v: self.seitenleiste.configure(width=max(int(v), 1)), nach_ms=2700,
               fertig=lambda: self.seiten_trenner.pack(side="left", fill="y", after=self.seitenleiste))
         a.spaeter(2950, lambda: self.baum_laden(nacheinander=True))
 
         # 4) Konsole rutscht nach unten, Editor erscheint, Tab-Leiste kommt
-        a.los(700, max(self.spalte.winfo_height(), self.px(500)), self.panel_hoehe,
-              lambda v: self.panel.configure(height=int(v)), nach_ms=3300, kurve=weich_rein_raus)
-        a.los(300, 0, self.px(36), lambda v: self.tableiste_rahmen.configure(height=int(v)), nach_ms=3800)
+        def konsole_rutscht():
+            self._panel_hoehe_anpassen()
+            a.los(700, self.panel.winfo_height(), self.panel_hoehe,
+                  lambda v: self.panel.configure(height=int(v)), kurve=weich_rein_raus)
+        a.spaeter(3300, konsole_rutscht)
+        a.los(300, 0, self.px(36), lambda v: self.tableiste_rahmen.configure(height=max(int(v), 1)), nach_ms=3800)
         for i, (teil, farbe) in enumerate(self.willkommen_teile):
             a.los(420, 0, 1, lambda t, w=teil, f=farbe: w.configure(fg=mische(HINTERGRUND, f, t)),
                   nach_ms=3900 + i * 70)
 
         # 5) Statusleiste
-        a.los(260, 0, self.px(26), lambda v: self.statusleiste.configure(height=int(v)), nach_ms=4600)
+        a.los(260, 0, self.px(26), lambda v: self.statusleiste.configure(height=max(int(v), 1)), nach_ms=4600)
 
         # 6) Fertig
         a.spaeter(5000, self._umbau_fertig)
@@ -1046,13 +1061,13 @@ class EdgyFenster:
         if self.seitenleiste_an:
             self.seitenleiste.pack(side="left", fill="y", before=self.spalte)
             self.seiten_trenner.pack(side="left", fill="y", after=self.seitenleiste)
-            self.animator.los(220, 0, self.seiten_breite, lambda v: self.seitenleiste.configure(width=int(v)))
+            self.animator.los(220, 1, self.seiten_breite, lambda v: self.seitenleiste.configure(width=max(int(v), 1)))
         else:
             def weg():
                 self.seitenleiste.pack_forget()
                 self.seiten_trenner.pack_forget()
-            self.animator.los(180, self.seitenleiste.winfo_width(), 0,
-                              lambda v: self.seitenleiste.configure(width=int(v)), fertig=weg)
+            self.animator.los(180, self.seitenleiste.winfo_width(), 1,
+                              lambda v: self.seitenleiste.configure(width=max(int(v), 1)), fertig=weg)
         self._aktiv_icons_faerben()
 
     def panel_umschalten(self):
@@ -1060,15 +1075,20 @@ class EdgyFenster:
         if self.panel_an:
             self.panel.pack(fill="x", side="bottom", before=self.editor_flaeche)
             self.panel_trenner.pack(fill="x", side="bottom", before=self.editor_flaeche)
-            self.animator.los(220, 0, self.panel_hoehe, lambda v: self.panel.configure(height=int(v)))
+            self.animator.los(220, 1, self.panel_hoehe, lambda v: self.panel.configure(height=max(int(v), 1)))
             self.feld.focus_set()
         else:
             def weg():
                 self.panel.pack_forget()
                 self.panel_trenner.pack_forget()
-            self.animator.los(180, self.panel.winfo_height(), 0,
-                              lambda v: self.panel.configure(height=int(v)), fertig=weg)
+            self.animator.los(180, self.panel.winfo_height(), 1,
+                              lambda v: self.panel.configure(height=max(int(v), 1)), fertig=weg)
         self._aktiv_icons_faerben()
+
+    def _panel_hoehe_anpassen(self):
+        """Konsole nimmt höchstens ein Drittel der Höhe ein."""
+        verfuegbar = self.root.winfo_height() - self.px(110)
+        self.panel_hoehe = max(self.px(140), min(self.panel_hoehe, int(verfuegbar * 0.34)))
 
     def _panel_zeigen(self):
         if not self.panel_an:
